@@ -215,6 +215,7 @@ use function min;
 use function preg_match;
 use function round;
 use function spl_object_hash;
+use function sprintf;
 use function sqrt;
 use function strlen;
 use function strpos;
@@ -2279,6 +2280,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$pk->experiments = new Experiments([], false);
 		$pk->itemTable = ItemTypeDictionary::getInstance()->getEntries();
 		$pk->playerMovementSettings = new PlayerMovementSettings(PlayerMovementType::LEGACY, 0, false);
+		$pk->serverSoftwareVersion = sprintf("%s %s", \pocketmine\NAME, \pocketmine\VERSION);
 		$this->dataPacket($pk);
 
 		$this->sendDataPacket(new AvailableActorIdentifiersPacket());
@@ -2527,6 +2529,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 			$blockVector = $packet->trData->getBlockPos();
 			$face = $packet->trData->getFace();
 
+			if($this->inventory->getHeldItemIndex() !== $packet->trData->getHotbarSlot()){
+				$this->inventory->equipItem($packet->trData->getHotbarSlot());
+			}
+
 			switch($packet->trData->getActionType()){
 				case UseItemTransactionData::ACTION_CLICK_BLOCK:
 					//TODO: start hack for client spam bug
@@ -2685,6 +2691,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 				return false;
 			}
 
+			if($this->inventory->getHeldItemIndex() !== $packet->trData->getHotbarSlot()){
+				$this->inventory->equipItem($packet->trData->getHotbarSlot());
+			}
+
 			switch($packet->trData->getActionType()){
 				case UseItemOnEntityTransactionData::ACTION_INTERACT:
 					break; //TODO
@@ -2776,6 +2786,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 			$this->inventory->sendContents($this);
 			return false;
 		}elseif($packet->trData instanceof ReleaseItemTransactionData){
+			if($this->inventory->getHeldItemIndex() !== $packet->trData->getHotbarSlot()){
+				$this->inventory->equipItem($packet->trData->getHotbarSlot());
+			}
+
 			try{
 				switch($packet->trData->getActionType()){
 					case ReleaseItemTransactionData::ACTION_RELEASE:
